@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Still Palette</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><rect x='5' y='5' width='22' height='15' fill='%23fff'/><rect x='5' y='23' width='5' height='4' fill='%23e0563f'/><rect x='11' y='23' width='5' height='4' fill='%23e8b23a'/><rect x='17' y='23' width='5' height='4' fill='%234a8fb5'/><rect x='23' y='23' width='4' height='4' fill='%237fa86b'/></svg>">
+</head>
+<body data-today="{{ today }}">
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <h1>Still Palette</h1>
+  </div>
+  <p class="tagline">Dominant colours, printed in the bezel.</p>
+</header>
+
+<main id="app">
+
+  <!-- Landing / drop state -->
+  <section id="landing" class="landing">
+    <div id="dropzone" class="dropzone" tabindex="0" role="button"
+         aria-label="Upload an image">
+      <svg class="dz-icon" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="6" y="8" width="36" height="26" rx="3"/>
+        <path d="M6 27l9-8 7 6 6-5 14 11"/>
+        <circle cx="31" cy="17" r="3"/>
+      </svg>
+      <p class="dz-title">Drop an image here</p>
+      <p class="dz-sub">or <button type="button" id="browse" class="linkish">browse
+        your files</button> &middot; you can paste one too</p>
+      <p class="dz-formats">JPG &middot; PNG &middot; GIF &middot; WEBP &middot; BMP &middot; TIFF &middot; up to 25MB</p>
+    </div>
+    <p id="landing-error" class="error" role="alert" hidden></p>
+  </section>
+
+  <!-- Editor state -->
+  <section id="editor" class="editor" hidden>
+
+    <div class="stage">
+      <div class="stage-inner">
+        <div id="print-wrap" class="print-wrap">
+          <img id="print" draggable="false"
+               alt="Your framed image with its colour bar">
+          <div id="bar-overlay" class="bar-overlay" aria-hidden="true"></div>
+          <div id="ov-tools" class="ov-tools" hidden>
+            <button type="button" class="tool" data-act="reroll" title="Re-roll this colour"></button>
+            <button type="button" class="tool" data-act="pick" title="Pick a colour from the photo"></button>
+          </div>
+          <div id="shimmer" class="shimmer" hidden></div>
+        </div>
+      </div>
+      <div class="stage-foot">
+        <p class="hint">Right-click the image to <strong>save</strong> or <strong>copy</strong> it.</p>
+        <p class="quality"><span id="quality-dot" class="dot"></span><span id="quality-text">Full quality</span></p>
+      </div>
+      <p id="stage-error" class="error inline" role="alert" hidden></p>
+    </div>
+
+    <aside class="panel" aria-label="Settings">
+
+      <div class="panel-head">
+        <div class="file-meta">
+          <p id="file-name" class="file-name"></p>
+          <p id="file-dims" class="file-dims"></p>
+        </div>
+        <button type="button" id="change-image" class="ghost">Change</button>
+      </div>
+
+      <section class="group">
+        <h2>Frame</h2>
+
+        <div class="field">
+          <label for="border-hex">Border colour</label>
+          <div class="colour-row">
+            <input type="color" id="border-color" value="#FFFFFF" aria-label="Border colour picker">
+            <input type="text" id="border-hex" value="#FFFFFF" spellcheck="false"
+                   maxlength="7" aria-label="Border colour hex">
+          </div>
+          <div class="presets" role="group" aria-label="Border presets">
+            <button type="button" class="preset" data-hex="#FFFFFF" style="--c:#FFFFFF" title="White"></button>
+            <button type="button" class="preset" data-hex="#F2EDE4" style="--c:#F2EDE4" title="Bone"></button>
+            <button type="button" class="preset" data-hex="#D9C7A7" style="--c:#D9C7A7" title="Kraft"></button>
+            <button type="button" class="preset" data-hex="#3A3A3A" style="--c:#3A3A3A" title="Charcoal"></button>
+            <button type="button" class="preset" data-hex="#000000" style="--c:#000000" title="Black"></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="border-width">Border width <output id="border-width-out">5%</output></label>
+          <input type="range" id="border-width" min="1" max="12" step="0.5" value="5">
+        </div>
+      </section>
+
+      <section class="group">
+        <div class="group-head">
+          <h2>Colour bar</h2>
+          <span id="palette-note" class="note" hidden></span>
+        </div>
+
+        <div class="field">
+          <label for="colour-count">Colours <output id="colour-count-out">5</output></label>
+          <input type="range" id="colour-count" min="2" max="12" step="1" value="5">
+        </div>
+
+        <div class="field">
+          <span class="label">Order</span>
+          <div class="segmented" role="group" aria-label="Colour order">
+            <button type="button" class="seg" data-order="dominance">Dominance</button>
+            <button type="button" class="seg" data-order="hue">Hue</button>
+            <button type="button" class="seg" data-order="lightness">Lightness</button>
+            <button type="button" class="seg" data-order="custom" id="seg-custom" disabled>Custom</button>
+          </div>
+          <label class="check">
+            <input type="checkbox" id="reverse"> <span>Reverse</span>
+          </label>
+        </div>
+
+        <div class="field">
+          <span class="label">Swatches</span>
+          <p class="tip">Drag the swatches <strong>on the print</strong> to reorder
+            them. Hover one for re-roll and eyedropper.</p>
+          <div class="chip-actions">
+            <button type="button" id="shuffle" class="ghost small">Shuffle all</button>
+            <button type="button" id="reset-palette" class="ghost small">Reset</button>
+          </div>
+          <p id="pick-hint" class="pick-hint" hidden>Click a colour in the photo &middot; <kbd>Esc</kbd> to cancel</p>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Bezel</h2>
+        <label class="check">
+          <input type="checkbox" id="show-hex"> <span>Show hex codes</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="signature"> <span>Add signature</span>
+        </label>
+        <div id="signature-fields" class="sig-fields" hidden>
+          <div class="field">
+            <label for="signature-text">Caption</label>
+            <input type="text" id="signature-text" maxlength="120" placeholder="Where, or what">
+          </div>
+          <div class="field">
+            <label for="signature-date">Date</label>
+            <input type="date" id="signature-date">
+          </div>
+        </div>
+      </section>
+
+    </aside>
+  </section>
+</main>
+
+<!-- Deliberately broad: a narrow accept list greys out formats in the file
+     picker so they cannot even be selected. The server validates properly and
+     explains what it cannot read. -->
+<input type="file" id="file-input" accept="image/*" hidden>
+
+<div id="drop-overlay" class="drop-overlay" hidden><div class="drop-card">Drop to replace</div></div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

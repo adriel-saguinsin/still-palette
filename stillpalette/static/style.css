@@ -1,0 +1,397 @@
+/* Still Palette */
+
+:root {
+  --bg: #f6f6f4;
+  --surface: #ffffff;
+  --surface-2: #fbfbfa;
+  --line: #e4e3df;
+  --line-strong: #d3d2cc;
+  --text: #1c1c1a;
+  --text-dim: #6f6e69;
+  --text-faint: #9b9a94;
+  --accent: #c25a3a;
+  --accent-soft: #f6e9e4;
+  --danger: #b23b2e;
+  --stage: #ebeae6;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-print: 0 1px 2px rgba(0,0,0,.10), 0 12px 32px -8px rgba(0,0,0,.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16161a;
+    --surface: #1e1e23;
+    --surface-2: #232329;
+    --line: #303038;
+    --line-strong: #3d3d47;
+    --text: #ececf0;
+    --text-dim: #a2a2ad;
+    --text-faint: #74747f;
+    --accent: #e0805f;
+    --accent-soft: #33241f;
+    --danger: #e0705f;
+    --stage: #101014;
+    --shadow-print: 0 1px 2px rgba(0,0,0,.5), 0 16px 40px -10px rgba(0,0,0,.7);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- top bar ---------- */
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand h1 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+.brand-mark {
+  width: 16px; height: 16px; border-radius: 3px;
+  background: linear-gradient(90deg,
+    var(--accent) 0 25%, #e8b23a 25% 50%, #4a8fb5 50% 75%, #7fa86b 75% 100%);
+}
+.tagline { margin: 0; font-size: 13px; color: var(--text-faint); }
+
+/* ---------- landing ---------- */
+
+.landing {
+  min-height: calc(100vh - 160px);
+  display: grid;
+  place-content: center;
+  padding: 40px 24px;
+  gap: 16px;
+}
+.dropzone {
+  width: min(620px, 88vw);
+  padding: 68px 40px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.dropzone:hover, .dropzone:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  outline: none;
+}
+.dropzone.over { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.005); }
+.dz-icon {
+  width: 48px; height: 48px; margin-bottom: 18px;
+  fill: none; stroke: var(--text-faint); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.dz-title { margin: 0 0 6px; font-size: 18px; font-weight: 550; }
+.dz-sub { margin: 0 0 18px; color: var(--text-dim); font-size: 14px; }
+.dz-formats { margin: 0; color: var(--text-faint); font-size: 12px; }
+.linkish {
+  background: none; border: 0; padding: 0; font: inherit;
+  color: var(--accent); cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- editor layout ---------- */
+
+.editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: calc(100vh - 61px);
+}
+@media (max-width: 900px) {
+  .editor { grid-template-columns: 1fr; }
+  .panel { border-left: 0 !important; border-top: 1px solid var(--line); }
+}
+
+.stage {
+  background: var(--stage);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 18px;
+  min-width: 0;
+}
+.stage-inner {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+.print-wrap { position: relative; line-height: 0; }
+#print {
+  display: block;
+  max-width: min(100%, 620px);
+  max-height: calc(100vh - 210px);
+  width: auto; height: auto;
+  box-shadow: var(--shadow-print);
+  border-radius: 2px;
+  transition: opacity .12s;
+  /* Dragging the print must not hand it back to the app as a new upload. */
+  -webkit-user-drag: none;
+  user-select: none;
+}
+#print.picking { cursor: crosshair; }
+#print.loading { opacity: .55; }
+
+.shimmer {
+  position: absolute; inset: 0; pointer-events: none; border-radius: 2px;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+  background-size: 300% 100%;
+  animation: sweep 1.1s ease-in-out infinite;
+}
+@keyframes sweep { from { background-position: 160% 0; } to { background-position: -60% 0; } }
+
+.stage-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; margin-top: 18px; flex-wrap: wrap;
+}
+.hint { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+.hint strong { font-weight: 600; color: var(--text); }
+.quality { margin: 0; font-size: 12px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #6aa84f; transition: background .2s; }
+.dot.pending { background: #d9a441; }
+
+/* ---------- panel ---------- */
+
+.panel {
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(100vh - 61px);
+}
+.panel-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line);
+}
+.file-meta { min-width: 0; }
+.file-name {
+  margin: 0; font-size: 13.5px; font-weight: 550;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 210px;
+}
+.file-dims { margin: 2px 0 0; font-size: 12px; color: var(--text-faint); }
+
+.group { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.group:last-child { border-bottom: 0; }
+.group h2 {
+  margin: 0 0 14px; font-size: 11px; font-weight: 650;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--text-faint);
+}
+.group-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.group-head h2 { margin: 0; }
+.note { font-size: 11px; color: var(--accent); }
+
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field > label, .field > .label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13px; margin-bottom: 7px; color: var(--text-dim);
+}
+.field .sub { font-size: 11px; color: var(--text-faint); }
+output { font-variant-numeric: tabular-nums; color: var(--text); font-size: 12.5px; }
+
+/* inputs */
+
+input[type="text"], input[type="date"] {
+  width: 100%; padding: 7px 9px;
+  border: 1px solid var(--line-strong); border-radius: 7px;
+  background: var(--surface-2); color: var(--text);
+  font: inherit; font-size: 13px;
+}
+input[type="text"]:focus, input[type="date"]:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+#border-hex { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-transform: uppercase; }
+#border-hex.invalid { border-color: var(--danger); }
+
+.colour-row { display: flex; gap: 8px; align-items: center; }
+input[type="color"] {
+  width: 40px; height: 34px; padding: 0; flex: none; cursor: pointer;
+  border: 1px solid var(--line-strong); border-radius: 7px;
+  background: var(--surface-2);
+}
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
+input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 4px; }
+
+.presets { display: flex; gap: 6px; margin-top: 8px; }
+.preset {
+  width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+  background: var(--c); border: 1px solid var(--line-strong);
+  transition: transform .12s, box-shadow .12s;
+}
+.preset:hover { transform: translateY(-1px); }
+.preset[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent); }
+
+input[type="range"] {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  background: transparent; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px; background: var(--line-strong);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 15px; height: 15px; margin-top: -5.5px;
+  border-radius: 50%; background: var(--accent);
+  border: 2px solid var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line-strong); }
+input[type="range"]::-moz-range-thumb {
+  width: 15px; height: 15px; border-radius: 50%; background: var(--accent);
+  border: 2px solid var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+
+.check {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text); cursor: pointer;
+  margin-top: 10px;
+}
+.check input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+/* segmented control */
+
+.segmented {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+  padding: 2px; background: var(--surface-2);
+  border: 1px solid var(--line-strong); border-radius: 8px;
+}
+.seg {
+  padding: 6px 2px; border: 0; border-radius: 6px; cursor: pointer;
+  background: transparent; color: var(--text-dim);
+  font: inherit; font-size: 11.5px; white-space: nowrap;
+  transition: background .12s, color .12s;
+}
+.seg:hover:not(:disabled) { color: var(--text); }
+.seg[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 550; }
+.seg:disabled { opacity: .4; cursor: default; }
+
+/* buttons */
+
+.ghost {
+  padding: 6px 11px; border: 1px solid var(--line-strong); border-radius: 7px;
+  background: var(--surface-2); color: var(--text);
+  font: inherit; font-size: 12.5px; cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.ghost:hover { border-color: var(--accent); color: var(--accent); }
+.ghost.small { padding: 5px 9px; font-size: 12px; }
+
+/* ---------- interactive swatches, laid over the print ---------- */
+
+/* Sized in JS to the print's measured box, not `inset: 0`. The wrapper does
+   not reliably match the image: when the print is tall enough for max-height
+   to decide the layout, the wrapper takes the width the image would have had
+   at that height while max-width clamps the image narrower, and the wrapper
+   never shrinks back. Percentages against the wrapper then stretch the whole
+   bar wider than the print it is supposed to sit on. */
+.bar-overlay { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+/* Hides the printed bar while the overlay stands in for it during a drag.
+   Painted in the frame colour so the gutters still read correctly. */
+.bar-mask { position: absolute; display: none; pointer-events: none; z-index: 0; }
+.bar-overlay.dragging .bar-mask,
+.bar-overlay.holding .bar-mask { display: block; }
+
+.ov-swatch {
+  position: absolute;
+  z-index: 1;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  /* Only the lift is animated here. Position is driven by transform during a
+     drag and must track the pointer with no easing, or dragging feels laggy. */
+  transition: box-shadow .12s ease;
+}
+.ov-swatch:hover { box-shadow: 0 0 0 2px var(--accent); z-index: 2; }
+.ov-swatch.armed { box-shadow: 0 0 0 3px var(--accent); z-index: 3; }
+
+/* The one under the pointer lifts off the bar and goes translucent, so you can
+   see the gap it will drop into through it. */
+.ov-swatch.dragging {
+  cursor: grabbing;
+  z-index: 5;
+  opacity: .72;
+  box-shadow: 0 10px 22px rgba(0,0,0,.4), 0 0 0 2px rgba(255,255,255,.95);
+}
+.ov-swatch.sliding { transition: transform .18s cubic-bezier(.2,.7,.3,1); }
+.bar-overlay.dragging .ov-swatch { cursor: grabbing; }
+/* Hover rings would fight the ghost for attention mid-drag. */
+.bar-overlay.dragging .ov-swatch:not(.dragging):hover { box-shadow: none; }
+
+/* floating toolbar, anchored above whichever swatch is hovered */
+.ov-tools {
+  position: absolute; z-index: 10;
+  display: flex; gap: 4px; padding: 4px;
+  border-radius: 8px;
+  background: rgba(22,22,26,.86);
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+  transform: translate(-50%, -100%);
+  backdrop-filter: blur(6px);
+}
+.ov-tools::after {
+  content: ""; position: absolute; top: 100%; left: 50%;
+  margin-left: -5px; border: 5px solid transparent;
+  border-top-color: rgba(22,22,26,.86);
+}
+.tool {
+  width: 26px; height: 26px; padding: 4px; border: 0; border-radius: 6px;
+  background: rgba(255,255,255,.92); cursor: pointer;
+  display: grid; place-items: center;
+}
+.tool:hover { background: #fff; }
+.tool svg {
+  width: 15px; height: 15px; fill: none; stroke: #222;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.tip {
+  margin: 0 0 10px; font-size: 12px; line-height: 1.45; color: var(--text-faint);
+}
+.tip strong { color: var(--text-dim); font-weight: 600; }
+.chip-actions { display: flex; gap: 6px; }
+.pick-hint {
+  margin: 10px 0 0; font-size: 11.5px; color: var(--accent);
+  background: var(--accent-soft); padding: 6px 8px; border-radius: 6px;
+}
+kbd {
+  font: inherit; font-size: 10.5px; padding: 1px 4px;
+  border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface);
+}
+
+.sig-fields { margin-top: 12px; }
+
+/* ---------- errors, overlay ---------- */
+
+.error {
+  margin: 0; padding: 10px 12px; border-radius: 8px;
+  background: var(--accent-soft); color: var(--danger); font-size: 13px;
+  text-align: center;
+}
+.error.inline { margin-top: 12px; text-align: left; }
+
+.drop-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,.42);
+  display: grid; place-items: center;
+  backdrop-filter: blur(2px);
+}
+.drop-card {
+  padding: 26px 46px; border-radius: var(--radius-lg);
+  border: 2px dashed #fff; color: #fff;
+  font-size: 17px; font-weight: 550;
+}
+
+[hidden] { display: none !important; }
